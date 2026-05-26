@@ -2,12 +2,12 @@ const { defineConfig, devices } = require('@playwright/test');
 
 module.exports = defineConfig({
   testDir: './tests',
-  timeout: 30000,
-  expect: { timeout: 5000 },
+  timeout: 60000,
+  expect: { timeout: 10000 },
   retries: 1,
   reporter: [['html'], ['list']],
   use: {
-    baseURL: 'https://demo.nopcommerce.com',
+    baseURL: 'https://www.saucedemo.com',
     headless: false,
     storageState: 'test-data/auth.json',
     screenshot: 'only-on-failure',

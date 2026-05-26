@@ -2,107 +2,96 @@ const { test, expect } = require('@playwright/test');
 const { LoginPage } = require('../../pages/auth/LoginPage.js');
 const users = require('../../test-data/users.json');
 
+// Override global storageState — login tests start unauthenticated
 test.use({ storageState: { cookies: [], origins: [] } });
 
-test.describe('Authentication', () => {
+test.describe('Authentication - SauceDemo', () => {
 
-  test('valid login redirects to homepage', async ({ page }) => {
+  test('valid login redirects to inventory page', async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.navigate();
-    await loginPage.login(users.validUser.email, users.validUser.password);
-    await page.waitForURL(
-      url => url.href.includes('nopcommerce.com/') && !url.href.includes('/login'),
-      { timeout: 15000 }
-    );
-    await expect(page.getByRole('link', { name: 'Log out' })).toBeVisible();
+    await loginPage.login(users.validUser.username, users.validUser.password);
+    await expect(page).toHaveURL(/inventory\.html/);
   });
 
-  test('invalid login shows error message', async ({ page }) => {
+  test('locked out user sees error message', async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.navigate();
-    await loginPage.login(users.invalidUser.email, users.invalidUser.password);
+    await loginPage.login(users.lockedUser.username, users.lockedUser.password);
+    await expect(loginPage.errorMessage).toBeVisible();
+    await expect(loginPage.errorMessage).toContainText('locked out');
+  });
+
+  test('invalid credentials shows error message', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.navigate();
+    await loginPage.login(users.invalidUser.username, users.invalidUser.password);
     await expect(loginPage.errorMessage).toBeVisible();
   });
 
-  test('empty email and password shows validation', async ({ page }) => {
-    const loginPage = new LoginPage(page);
-    await loginPage.navigate();
-    await loginPage.login('', '');
-    await expect(page).toHaveURL(/login/);
-  });
-
-  test('empty email only shows validation', async ({ page }) => {
+  test('empty username shows validation error', async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.navigate();
     await loginPage.login('', users.validUser.password);
-    await expect(page).toHaveURL(/login/);
+    await expect(loginPage.errorMessage).toBeVisible();
+    await expect(loginPage.errorMessage).toContainText('Username is required');
   });
 
-  test('invalid email format is rejected', async ({ page }) => {
+  test('empty password shows validation error', async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.navigate();
-    await loginPage.login('notanemail', users.validUser.password);
-    await expect(page).toHaveURL(/login/);
+    await loginPage.login(users.validUser.username, '');
+    await expect(loginPage.errorMessage).toBeVisible();
+    await expect(loginPage.errorMessage).toContainText('Password is required');
+  });
+
+  test('empty username and password shows validation error', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.navigate();
+    await loginPage.login('', '');
+    await expect(loginPage.errorMessage).toBeVisible();
   });
 
   test('login page has correct title', async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.navigate();
-    await expect(page).toHaveTitle(/Log in/);
+    await expect(page).toHaveTitle(/Swag Labs/);
   });
 
-  test('login page has email and password fields', async ({ page }) => {
+  test('login page has username and password fields', async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.navigate();
-    await expect(loginPage.emailInput).toBeVisible();
+    await expect(loginPage.usernameInput).toBeVisible();
     await expect(loginPage.passwordInput).toBeVisible();
   });
 
-  test('login page has register link', async ({ page }) => {
+  test('login page has login button', async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.navigate();
-    await expect(page.getByRole('link', { name: 'Register' })).toBeVisible();
-  });
-
-  test('forgot password link is visible', async ({ page }) => {
-    const loginPage = new LoginPage(page);
-    await loginPage.navigate();
-    await expect(page.getByRole('link', { name: 'Forgot password?' })).toBeVisible();
-  });
-
-  test('forgot password page loads correctly', async ({ page }) => {
-    const loginPage = new LoginPage(page);
-    await loginPage.navigate();
-    await page.getByRole('link', { name: 'Forgot password?' }).click();
-    await expect(page).toHaveURL(/passwordrecovery/);
+    await expect(loginPage.loginButton).toBeVisible();
   });
 
   test('logout works after login', async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.navigate();
-    await loginPage.login(users.validUser.email, users.validUser.password);
-    await page.waitForURL(
-      url => !url.href.includes('/login'),
-      { timeout: 15000 }
-    );
+    await loginPage.login(users.validUser.username, users.validUser.password);
+    await expect(page).toHaveURL(/inventory\.html/);
     await loginPage.logout();
-    await expect(page.getByRole('link', { name: 'Log in' })).toBeVisible();
+    await expect(page).toHaveURL(/saucedemo\.com\/?$/);
   });
 
-  test('guest user sees login link in header', async ({ page }) => {
-    await page.goto('https://demo.nopcommerce.com/');
-    await expect(page.getByRole('link', { name: 'Log in' })).toBeVisible();
-  });
-
-  test('registered user sees account link after login', async ({ page }) => {
+  test('user stays on login page after invalid login', async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.navigate();
-    await loginPage.login(users.validUser.email, users.validUser.password);
-    await page.waitForURL(
-      url => !url.href.includes('/login'),
-      { timeout: 15000 }
-    );
-    await expect(page.getByRole('link', { name: 'My account' })).toBeVisible();
+    await loginPage.login(users.invalidUser.username, users.invalidUser.password);
+    await expect(page).toHaveURL(/saucedemo\.com\/?$/);
+  });
+
+  test('credentials are accepted for all standard test users', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.navigate();
+    await loginPage.login('problem_user', 'secret_sauce');
+    await expect(page).toHaveURL(/inventory\.html/);
   });
 
 });

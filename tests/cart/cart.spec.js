@@ -1,128 +1,109 @@
 const { test, expect } = require('@playwright/test');
 const { CartPage } = require('../../pages/cart/CartPage.js');
 
-test.use({ storageState: 'test-data/auth.json' });
+// These tests require auth (uses storageState from playwright.config.js)
+// Each test gets a fresh isolated browser context — cart is empty by default
+test.describe('Shopping Cart - SauceDemo', () => {
 
-test.describe('Shopping Cart', () => {
-
-  test('empty cart shows empty message', async ({ page }) => {
+  test('cart is empty by default', async ({ page }) => {
     const cart = new CartPage(page);
     await cart.navigate();
-    await expect(cart.emptyCartMessage).toBeVisible();
+    const count = await cart.getItemCount();
+    expect(count).toBe(0);
   });
 
   test('cart page loads successfully', async ({ page }) => {
     const cart = new CartPage(page);
     await cart.navigate();
-    await expect(page).toHaveURL(/cart/);
-  });
-
-  test('cart badge is visible in header', async ({ page }) => {
-    await page.goto('/');
-    const cart = new CartPage(page);
-    await expect(cart.cartBadge).toBeVisible();
-  });
-
-  test('add product to cart from search', async ({ page }) => {
-    await page.goto('/');
-    await page.getByPlaceholder('Search store').fill('laptop');
-    await page.getByRole('button', { name: 'Search' }).click();
-    await page.locator('.product-item').first().click();
-    await page.getByRole('button', { name: 'Add to cart' }).click();
-    await expect(page.locator('.bar-notification')).toBeVisible();
-  });
-
-  test('cart updates after adding product', async ({ page }) => {
-    await page.goto('/');
-    await page.getByPlaceholder('Search store').fill('laptop');
-    await page.getByRole('button', { name: 'Search' }).click();
-    await page.locator('.product-item').first().click();
-    await page.getByRole('button', { name: 'Add to cart' }).click();
-    await page.goto('/cart');
-    const cart = new CartPage(page);
-    const count = await cart.getItemCount();
-    expect(count).toBeGreaterThan(0);
-  });
-
-  test('checkout button is visible with items in cart', async ({ page }) => {
-    await page.goto('/');
-    await page.getByPlaceholder('Search store').fill('laptop');
-    await page.getByRole('button', { name: 'Search' }).click();
-    await page.locator('.product-item').first().click();
-    await page.getByRole('button', { name: 'Add to cart' }).click();
-    await page.goto('/cart');
-    const cart = new CartPage(page);
-    await expect(cart.checkoutButton).toBeVisible();
-  });
-
-  test('continue shopping returns to home', async ({ page }) => {
-    const cart = new CartPage(page);
-    await cart.navigate();
-    await page.getByRole('link', { name: 'Continue shopping' }).click();
-    await expect(page).toHaveURL('https://demo.nopcommerce.com/');
-  });
-
-  test('discount code input is visible', async ({ page }) => {
-    const cart = new CartPage(page);
-    await cart.navigate();
-    await expect(cart.discountInput).toBeVisible();
-  });
-
-  test('invalid discount code shows error', async ({ page }) => {
-    const cart = new CartPage(page);
-    await cart.navigate();
-    await cart.applyDiscount('INVALIDCODE123');
-    await expect(page.locator('.message-failure')).toBeVisible();
+    await expect(page).toHaveURL(/cart\.html/);
   });
 
   test('cart page has correct title', async ({ page }) => {
     const cart = new CartPage(page);
     await cart.navigate();
-    await expect(page).toHaveTitle(/Shopping Cart/);
+    await expect(cart.cartTitle).toHaveText('Your Cart');
   });
 
-  test('update cart button is visible', async ({ page }) => {
-    const cart = new CartPage(page);
-    await cart.navigate();
-    await expect(cart.updateCartButton).toBeVisible();
+  test('cart badge not visible when cart is empty', async ({ page }) => {
+    await page.goto('/inventory.html');
+    await expect(page.locator('.shopping_cart_badge')).not.toBeVisible();
   });
 
-  test('estimate shipping section is visible', async ({ page }) => {
-    const cart = new CartPage(page);
-    await cart.navigate();
-    await expect(
-      page.getByText('Estimate shipping')
-    ).toBeVisible();
+  test('add product to cart from inventory', async ({ page }) => {
+    await page.goto('/inventory.html');
+    await page.locator('[data-test^="add-to-cart"]').first().click();
+    await expect(page.locator('.shopping_cart_badge')).toHaveText('1');
   });
 
-  test('gift card input is visible', async ({ page }) => {
-    const cart = new CartPage(page);
-    await cart.navigate();
-    await expect(
-      page.locator('#giftcardcouponcode')
-    ).toBeVisible();
+  test('cart badge updates after adding product', async ({ page }) => {
+    await page.goto('/inventory.html');
+    await page.locator('[data-test^="add-to-cart"]').first().click();
+    await page.locator('[data-test^="add-to-cart"]').first().click();
+    await expect(page.locator('.shopping_cart_badge')).toHaveText('2');
   });
 
-  test('cart subtotal section is visible', async ({ page }) => {
+  test('added product appears in cart', async ({ page }) => {
+    await page.goto('/inventory.html');
+    await page.locator('[data-test^="add-to-cart"]').first().click();
     const cart = new CartPage(page);
     await cart.navigate();
-    await expect(cart.subTotal).toBeVisible();
+    const count = await cart.getItemCount();
+    expect(count).toBe(1);
   });
 
-  test('terms of service checkbox is visible', async ({ page }) => {
+  test('remove item from cart works', async ({ page }) => {
+    await page.goto('/inventory.html');
+    await page.locator('[data-test^="add-to-cart"]').first().click();
     const cart = new CartPage(page);
     await cart.navigate();
-    await expect(
-      page.locator('#termsofservice')
-    ).toBeVisible();
+    await cart.removeFirstItem();
+    const count = await cart.getItemCount();
+    expect(count).toBe(0);
   });
 
-  test('cart page has breadcrumb', async ({ page }) => {
+  test('checkout button is visible with items in cart', async ({ page }) => {
+    await page.goto('/inventory.html');
+    await page.locator('[data-test^="add-to-cart"]').first().click();
     const cart = new CartPage(page);
     await cart.navigate();
-    await expect(
-      page.locator('.breadcrumb')
-    ).toBeVisible();
+    await expect(cart.checkoutButton).toBeVisible();
+  });
+
+  test('continue shopping button returns to inventory', async ({ page }) => {
+    const cart = new CartPage(page);
+    await cart.navigate();
+    await cart.continueShopping();
+    await expect(page).toHaveURL(/inventory\.html/);
+  });
+
+  test('cart item shows product name', async ({ page }) => {
+    await page.goto('/inventory.html');
+    await page.locator('[data-test^="add-to-cart"]').first().click();
+    const cart = new CartPage(page);
+    await cart.navigate();
+    await expect(page.locator('.inventory_item_name').first()).toBeVisible();
+  });
+
+  test('cart item shows product price', async ({ page }) => {
+    await page.goto('/inventory.html');
+    await page.locator('[data-test^="add-to-cart"]').first().click();
+    const cart = new CartPage(page);
+    await cart.navigate();
+    await expect(page.locator('.inventory_item_price').first()).toBeVisible();
+  });
+
+  test('checkout navigates to checkout step one', async ({ page }) => {
+    await page.goto('/inventory.html');
+    await page.locator('[data-test^="add-to-cart"]').first().click();
+    const cart = new CartPage(page);
+    await cart.navigate();
+    await cart.checkout();
+    await expect(page).toHaveURL(/checkout-step-one\.html/);
+  });
+
+  test('cart icon is visible in header', async ({ page }) => {
+    await page.goto('/inventory.html');
+    await expect(page.locator('#shopping_cart_container')).toBeVisible();
   });
 
 });

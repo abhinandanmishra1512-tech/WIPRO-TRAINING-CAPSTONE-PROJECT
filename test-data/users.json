@@ -1,10 +1,14 @@
 {
   "validUser": {
-    "email": "abhinandanmishra1512@gmail.com",
-    "password": "Test@12345"
+    "username": "standard_user",
+    "password": "secret_sauce"
+  },
+  "lockedUser": {
+    "username": "locked_out_user",
+    "password": "secret_sauce"
   },
   "invalidUser": {
-    "email": "wrong@example.com",
-    "password": "wrongpass"
+    "username": "invalid_user",
+    "password": "wrongpassword"
   }
 }

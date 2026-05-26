@@ -1,25 +1,25 @@
 class LoginPage {
   constructor(page) {
-    this.page = page;
-    this.emailInput    = page.getByLabel('Email:');
-    this.passwordInput = page.getByLabel('Password:');
-    this.loginButton   = page.getByRole('button', { name: 'Log in' });
-    this.errorMessage  = page.locator('.message-error');
-    this.logoutLink    = page.getByRole('link', { name: 'Log out' });
+    this.page          = page;
+    this.usernameInput = page.locator('[data-test="username"]');
+    this.passwordInput = page.locator('[data-test="password"]');
+    this.loginButton   = page.locator('[data-test="login-button"]');
+    this.errorMessage  = page.locator('[data-test="error"]');
   }
 
   async navigate() {
-    await this.page.goto('https://demo.nopcommerce.com/login');
+    await this.page.goto('/');
   }
 
-  async login(email, password) {
-    await this.emailInput.fill(email);
+  async login(username, password) {
+    await this.usernameInput.fill(username);
     await this.passwordInput.fill(password);
     await this.loginButton.click();
   }
 
   async logout() {
-    await this.logoutLink.click();
+    await this.page.locator('#react-burger-menu-btn').click();
+    await this.page.locator('#logout_sidebar_link').click();
   }
 }
 

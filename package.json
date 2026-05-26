@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "auth:setup": "node helpers/auth.setup.js",
+    "test": "playwright test"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/abhinandanmishra1512-tech/WIPRO-TRAINING-CAPSTONE-PROJECT.git"
@@ -19,5 +22,8 @@
   "devDependencies": {
     "@playwright/test": "^1.60.0",
     "@types/node": "^25.9.1"
+  },
+  "dependencies": {
+    "pdf-lib": "^1.17.1"
   }
 }
