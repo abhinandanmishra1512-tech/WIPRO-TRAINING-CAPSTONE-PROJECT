@@ -4,6 +4,7 @@
   "description": "Playwright E2E automation capstone project for SauceDemo",
   "scripts": {
     "test": "playwright test",
+    "test:ci": "playwright test --reporter=allure-playwright",
     "test:headed": "playwright test --headed",
     "test:ui": "playwright test --ui",
     "test:debug": "playwright test --debug",
