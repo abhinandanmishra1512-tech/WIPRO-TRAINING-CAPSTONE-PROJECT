@@ -5,6 +5,7 @@ class ProductCatalogPage {
     this.productNames = page.locator('.inventory_item_name');
     this.sortDropdown = page.locator('.product_sort_container');
     this.pageTitle    = page.locator('.title');
+    this.addToCartBtn = page.locator('[data-test^="add-to-cart"]');
   }
 
   async navigate() {
@@ -16,7 +17,6 @@ class ProductCatalogPage {
   }
 
   async sortBy(value) {
-    // values: 'az', 'za', 'lohi', 'hilo'
     await this.sortDropdown.selectOption(value);
   }
 
@@ -29,7 +29,14 @@ class ProductCatalogPage {
   }
 
   async addFirstProductToCart() {
-    await this.productItems.first().locator('button').click();
+    await this.addToCartBtn.first().click();
+  }
+
+  async addAllProductsToCart() {
+    const count = await this.addToCartBtn.count();
+    for (let i = 0; i < count; i++) {
+      await this.addToCartBtn.first().click();
+    }
   }
 }
 
