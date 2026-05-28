@@ -6,14 +6,8 @@ node_modules/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
-
-# Allure
-/allure-results/
-/allure-report/
-
 # Auth state (generated at runtime)
 test-data/auth.json
-
 # OS
 .DS_Store
 Thumbs.db
