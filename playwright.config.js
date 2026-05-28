@@ -2,13 +2,20 @@ const { defineConfig, devices } = require('@playwright/test');
 
 module.exports = defineConfig({
   testDir: './tests',
+  globalSetup: require.resolve('./helpers/auth.setup.js'),
   timeout: 60000,
   expect: { timeout: 10000 },
-  retries: 1,
-  reporter: [['html'], ['list']],
+  retries: process.env.CI ? 2 : 0,
+  fullyParallel: true,
+  workers: process.env.CI ? 4 : undefined,
+  reporter: [
+    ['list'],
+    ['html', { open: 'never' }],
+    ['allure-playwright', { outputFolder: 'allure-results' }],
+  ],
   use: {
     baseURL: 'https://www.saucedemo.com',
-    headless: false,
+    headless: true,
     storageState: 'test-data/auth.json',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
