@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-
 # Playwright
 /test-results/
 /playwright-report/
@@ -11,3 +10,6 @@ test-data/auth.json
 # OS
 .DS_Store
 Thumbs.db
+# Allure
+/allure-results/
+/allure-report/
